@@ -12,9 +12,9 @@ Ingame hours boost for Steam with Heroku
 2. Open `config.json`, fill `username` and `password` of the bot steam account (just created).
 3. Open the console in the same folder (SHIFT + right mouse, open PowerShell window here, if you use Windows), enter the next commands:
 
-`npm init`
+`git init`
 
-`npm add .`
+`git add .`
 
 `git commit -m 'commit'`
 
