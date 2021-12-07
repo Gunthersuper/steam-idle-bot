@@ -202,8 +202,8 @@ function add_json(param) {
 }
 
 function login(user, username, password, shared_secret="", loginKey="") {
-	if (loginKey != "") user.logOn({"accountName": username, "loginKey": loginKey, "rememberPassword": true})
-	else if (shared_secret != "") user.logOn({"accountName": username, "password": password, "twoFactorCode": steamTotp.generateAuthCode(shared_secret),"rememberPassword": true})
+	if (shared_secret != "") user.logOn({"accountName": username, "password": password, "twoFactorCode": steamTotp.generateAuthCode(shared_secret),"rememberPassword": true})	
+	else if (loginKey != "") user.logOn({"accountName": username, "loginKey": loginKey, "rememberPassword": true})
 	else user.logOn({"accountName": username, "password": password,"rememberPassword": true});
 };
 
