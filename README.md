@@ -1,6 +1,10 @@
 # steam-idle-bot
 Ingame hours boost for Steam with Heroku
 
+## Im progress ...
+
+
+
 <b>Requirements:</b>
 1. Install Git: https://git-scm.com/downloads
 2. Install Heroku CLI: https://devcenter.heroku.com/articles/heroku-cli
