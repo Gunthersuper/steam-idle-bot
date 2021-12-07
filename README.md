@@ -1,7 +1,7 @@
 # steam-idle-bot
 Ingame hours boost for Steam with Heroku
 
-## Im progress ...
+## In progress ...
 
 
 
