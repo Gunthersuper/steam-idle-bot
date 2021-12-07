@@ -2,7 +2,7 @@
 Ingame hours boost for Steam with Heroku
 
 ## In progress ...
-
+## Needs to enter a guard code every 24h (login_key isnt working)
 
 
 <b>Requirements:</b>
