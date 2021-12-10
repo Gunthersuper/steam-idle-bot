@@ -3,9 +3,42 @@ const steamTotp = require('steam-totp');
 const path = require('path');
 var fs = require('fs');
 var async = require('async');
+const GitHub  = require('github-api')
+
 
 config = require(path.resolve('config.json'));
+
 let configRaw = fs.readFileSync('./config.json').toString();
+var git_config = {};
+var gh 
+var repo
+if (config.remote_control == true) {
+	gh = new GitHub({ token: config.github_token });
+	repo = gh.getRepo(config.github_username, "json");
+	repo.getContents("main", "config.json", false, function(error, result, request) {
+		if ((error == null) && (request.statusText == 'OK')) {
+				let buff = Buffer.from(request.data.content, 'base64'); 
+				git_config = JSON.parse(buff.toString('ascii')); 
+		}
+	})
+}
+
+function git_json(data) {
+	repo.writeFile("main", "config.json", JSON.stringify(data), "from_heroku", function(error, result, request) {
+		if ((error == null) && (request.statusText == 'OK')) {
+			console.log('github config is changed')
+		}
+	})
+}
+
+function add_json(param) {
+	fs.writeFile ("config.json", JSON.stringify(param), function(err) {
+	    if (err) throw err;
+	    console.log('Config is changed');
+	    }
+	);
+	if (config.remote_control == true) 	git_json(param)
+}
 
 var hold = true;
 var check_bot = false;
@@ -31,7 +64,9 @@ function dublicate(data) {
 
 bot.on('loggedOn', () => {
 	if (bot.steamID != null) {
-		console.log(bot.steamID + ' - Successfully logged on');
+		console.log(bot.steamID + ' - Successfully logged on');	
+		
+		console.log(git_config);
 		check_bot = true;
 	}
 	bot.setPersona(config.persona);               
@@ -192,19 +227,11 @@ bot.on('friendMessage', function(steamID, message) {
 	}
 });
 
-function add_json(param) {
-	fs.writeFile ("config.json", JSON.stringify(param), function(err) {
-	    if (err) throw err;
-	    console.log('Config is changed');
-	    }
-	);
-	//fs.close()
-}
 
-function login(user, username, password, shared_secret="", loginKey="") {
-	if (shared_secret != "") user.logOn({"accountName": username, "password": password, "twoFactorCode": steamTotp.generateAuthCode(shared_secret),"rememberPassword": true})	
-	else if (loginKey != "") user.logOn({"accountName": username, "loginKey": loginKey, "rememberPassword": true})
-	else user.logOn({"accountName": username, "password": password,"rememberPassword": true});
+function login(user, username, password, shared_secret, loginKey="") {
+	if (shared_secret != "") user.logOn({"accountName": username, "password": password, "twoFactorCode": steamTotp.generateAuthCode(shared_secret),"rememberPassword": true, "machineName": "DESKTOP-TQ6A7777", "clientOS": 16})
+	else if (loginKey != "") user.logOn({"accountName": username, "loginKey": loginKey, "rememberPassword": true, "machineName": "DESKTOP-TQ6A7777", "clientOS": 16})
+	else user.logOn({"accountName": username, "password": password,"rememberPassword": true, "machineName": "DESKTOP-TQ6A7777", "clientOS": 16});
 };
 
 async function sleepUntil(f, timeoutMs) {
@@ -232,10 +259,17 @@ function auth(user, username, pass, shared_secret, loginKey, state, games, numbe
 	user.on('steamGuard', async function(domain, callback, lastCodeWrong) {
 		hold = true;
 		console.log("Steam Guard code needed");
-		bot.chatMessage(config.main, "Enter a guard code for " + username);
-		await sleepUntil(() => !hold, 120000);
-		var code = temp_code;
-		callback(code);
+		
+		if (shared_secret !="") {
+			var code = steamTotp.generateAuthCode(shared_secret)
+			callback(code);
+		}
+		else {
+			bot.chatMessage(config.main, "Enter a guard code for " + username);
+			await sleepUntil(() => !hold, 120000);
+			var code = temp_code;
+			callback(code);
+		}
 
 	});
 
@@ -304,16 +338,47 @@ function auth(user, username, pass, shared_secret, loginKey, state, games, numbe
 	
 	});
 
+
+
+	// user.storage.on('save', function(filename, contents, callback) {
+	// 	repo.writeFile("main", filename, content, "heroku", function(error, result, request) {
+	// 		if (error == null) {
+	// 			console.log('github sentry is changed')
+	// 		}
+	// 	})
+	// })
+	//user.storage.on('read', function(filename, callback) {
+		// repo.getContents("main", filename, false, function(error, result, request) {
+		// 	if (error) {
+		// 		console.log(error)
+		// 		return
+		// 	}
+		// 	var file = Buffer.from(request.data.content, 'base64');  
+		// 	callback(file)
+		// })
+		
+	//})
+
 };
 
 
 var holdd = false;
 
+
+
 (async() => {
 	await sleepUntil(() => check_bot, 50000);
+	await new Promise(resolve => setTimeout(resolve, 5000));
+
+	if ((git_config != {}) && (config.remote_control == true)) { 
+		config = git_config; 
+		users = git_config.users
+		bot.setPersona(config.persona);               
+		bot.gamesPlayed(config.bot_playing);
+	}
 	for (let i = 0; i < users.length; i++) {
 		await new Promise(resolve => setTimeout(resolve, 5000));
-		user[i] = new steamUser();
+		user[i] = new steamUser({"machineIdType": 4});
 		auth(user[i], users[i].user, users[i].password, users[i].shared_secret, users[i].key, users[i].persona, users[i].games, i, users[i].logged);
 		holdd = true;
 		await sleepUntil(() => !holdd, 120000);
