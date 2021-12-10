@@ -1,4 +1,7 @@
 {
+	"remote_control":false,
+	"github_token":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+	"github_username":"",
 	"username":"your_bot_username",
 	"password":"your_bot_password", 
 	"shared_secret":"",
